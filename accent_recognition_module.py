@@ -11,8 +11,11 @@ class Utility:
         pass
 
     @staticmethod
-    def change_shape(x: list, dim: int, new_val: int):
-        r = x.copy()
+    def change_shape(x, dim: int, new_val: int):
+        if isinstance(x,tuple):
+            r = list(x)
+        else:
+            r = x.copy()
         r[dim] = new_val
         return r
 

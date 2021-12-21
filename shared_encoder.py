@@ -20,6 +20,8 @@ class SharedEncoder(nn.Module):
 
         bi_gru = BiGRU(x.size(2), self.hidden_dim)
         x = bi_gru(x)
+        print("SHAPEX=",x.shape)
         layer_norm = nn.LayerNorm(x.size(2))
         x = layer_norm(x)
+        print("SHAPEX=",x.shape)
         return x
