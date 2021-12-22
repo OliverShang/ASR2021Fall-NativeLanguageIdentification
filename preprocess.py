@@ -14,7 +14,23 @@ if __name__ == "__main__":
         df = pd.read_csv(file, sep="\t")
         col = "accent"
         # Rows with accent labels
-        accented_df = df[(df[col].notnull()) & (df[col] != "NAN")]
+        accented_df = df[
+            (df[col].notnull())
+            & (df[col] != "NAN")
+            & (
+                df[col].isin(
+                    [
+                        "us",
+                        "indian",
+                        "england",
+                        "australia",
+                        "african",
+                        "philippines",
+                        "ireland",
+                    ]
+                )
+            )
+        ]
         label_list = accented_df[col].unique()
         label_list.sort()
         label_dict = dict(zip(label_list, [_ for _ in range(len(label_list))]))
@@ -35,6 +51,6 @@ if __name__ == "__main__":
         for file in file_list:
             src = os.path.join(src_path, file)
             dst = os.path.join(dst_path, file)
-            shutil.copyfile(src, dst)
+            # shutil.copyfile(src, dst)
     else:
         print("Wrong argument.\n Usage: python preprocess dev")

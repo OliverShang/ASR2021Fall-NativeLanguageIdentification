@@ -2,7 +2,9 @@ from torch.utils.data import Dataset
 import os
 import numpy as np
 import pandas as pd
+import torch
 import torchaudio
+from utils import *
 
 
 class CommonVoiceDataset(Dataset):
@@ -21,13 +23,13 @@ class CommonVoiceDataset(Dataset):
     def __len__(self):
         return len(self.data_dict)
 
-    def feature_reshape(feature, max_len=1200):
-        h, w = feature.shape
-        if h >= max_len:
-            return feature[:max_len]
+    def feature_reshape(self, feature, max_len=1200):
+        x, y, z = feature.shape
+        if z >= max_len:
+            return feature[:, :, :max_len]
         else:
-            feat_ = np.zeros((max_len, w))
-            feat_[:h] = feature
+            feat_ = torch.zeros((x, y, max_len))
+            feat_[:, :, :z] = feature
             return feat_
 
     def __getitem__(self, idx):
@@ -35,11 +37,14 @@ class CommonVoiceDataset(Dataset):
         waveform, sample_rate = torchaudio.load(file_path)
         feature = waveform
         label = self.data_dict.iloc[idx, 1]
+        one_hot_label = torch.zeros(CLASS_NUM)
+        one_hot_label[label] = 1
         if self.feature == "spectrogram":
             feature = torchaudio.transforms.Spectrogram()(waveform)
         elif self.feature == "mel_spectrogram":
             feature = torchaudio.transforms.MelSpectrogram()(waveform)
         elif self.feature == "mfcc":
             feature = torchaudio.transforms.MFCC()(waveform)
+            # print(feature.shape)
 
-        return self.feature_reshape(feature), label
+        return self.feature_reshape(feature), one_hot_label

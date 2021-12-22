@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 # Test for dataset
 
 if __name__ == "__main__":
-    dev_set = CommonVoiceDataset()
+    dev_set = CommonVoiceDataset(feature="mfcc")
     dev_loader = DataLoader(dev_set, batch_size=64, shuffle=True)
     dev_features, dev_labels = next(iter(dev_loader))
     print(f"Feature batch shape: {dev_features.size()}")

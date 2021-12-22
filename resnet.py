@@ -50,7 +50,7 @@ class ResNet(nn.Module):
                     nn.Conv2d(64 * 2 ** (index - 1), 64 * 2 ** index, 1, 2, bias=False),
                     nn.BatchNorm2d(64 * 2 ** index)
                 )
-                self.layers.append(ResidualBlock(64 * 2 ** (index - 1), 64 * 2 ** index, 2, shortcut))  # 每次变化通道数时进行下采样
+                self.layers.append(ResidualBlock(64 * 2 ** (index - 1), 64 * 2 ** index, 2, shortcut)) 
             for _ in range(0 if index == 0 else 1, block_num):
                 self.layers.append(ResidualBlock(64 * 2 ** index, 64 * 2 ** index, 1))
         return nn.Sequential(*self.layers)

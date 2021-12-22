@@ -30,7 +30,7 @@ class SimpleARCNN(nn.Module):
         self.pool5 = nn.MaxPool2d((3, 5), (1, 5), padding=(1, 2))
         self.pool6 = nn.AvgPool2d((5, 5), (5, 5))
         self.flatten = nn.Flatten()
-        self.dense1 = nn.Linear(256, 32)
+        self.dense1 = nn.Linear(1280, 32)
         self.dropout1 = nn.Dropout(0.2)
         self.fc = nn.Linear(32, accent_classes)
         self.fca = nn.Softmax(1)
