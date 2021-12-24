@@ -1,11 +1,15 @@
-from dataset import CommonVoiceDataset
+from dataset import CommonVoiceDataset, KaggleDataset
 from torch.utils.data import DataLoader
 
 # from matplotlib.pyplot import pyplot as plt
 # Test for dataset
 
 if __name__ == "__main__":
-    dev_set = CommonVoiceDataset(feature="mfcc")
+    # dev_set = CommonVoiceDataset(feature="mfcc")
+    # dev_loader = DataLoader(dev_set, batch_size=64, shuffle=True)
+    # dev_features, dev_labels = next(iter(dev_loader))
+
+    dev_set = KaggleDataset(feature="mfcc")
     dev_loader = DataLoader(dev_set, batch_size=64, shuffle=True)
     dev_features, dev_labels = next(iter(dev_loader))
     print(f"Feature batch shape: {dev_features.size()}")

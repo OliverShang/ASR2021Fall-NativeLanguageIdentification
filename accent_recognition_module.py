@@ -58,10 +58,9 @@ class ARIntegration(nn.Module):
         self.cl2 = nn.Linear(64, 64)
         self.cl2a = nn.ReLU()
         self.fc = nn.Linear(64, accent_classes)
-        self.fca = nn.Softmax()
+        self.fca = nn.Softmax(0)
 
     def forward(self, x):
-        print("INPUT SHAPE", x.shape)
         x = self.dense1(x)
         x = self.dense1_actv(x)
         x = self.layernorm1(x)

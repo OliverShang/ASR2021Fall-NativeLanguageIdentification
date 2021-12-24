@@ -1,6 +1,7 @@
 from torch import nn
 from rnn import *
 from resnet import ResNet
+from utils import DEVICE
 
 
 class SharedEncoder(nn.Module):
@@ -13,15 +14,13 @@ class SharedEncoder(nn.Module):
 
     def forward(self, x):
         x = self.resnet(x)
-        dense = nn.Linear(x.size(2), self.hidden_dim)
+        dense = nn.Linear(x.size(2), self.hidden_dim).to(DEVICE)
         x = dense(x)
         x = self.activation(x)
         x = self.LN(x)
 
-        bi_gru = BiGRU(x.size(2), self.hidden_dim)
+        bi_gru = BiGRU(x.size(2), self.hidden_dim).to(DEVICE)
         x = bi_gru(x)
-        print("SHAPEX=",x.shape)
-        layer_norm = nn.LayerNorm(x.size(2))
+        layer_norm = nn.LayerNorm(x.size(2)).to(DEVICE)
         x = layer_norm(x)
-        print("SHAPEX=",x.shape)
         return x
