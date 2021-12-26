@@ -11,7 +11,7 @@ class SimpleARCNN(nn.Module):
     SimpleARCNN
     The input should be a 4D tensor [Batch size,1 (Channel),MFCC Features,Frequency Components]
     """
-    def __init__(self, accent_classes):
+    def __init__(self, accent_classes=2,conv_out=1280,fc_ne=128,feature_only=False):
         super(SimpleARCNN, self).__init__()
         self.conv1 = nn.Conv2d(1, 16, (3, 3), (1, 1), padding=(1, 1))
         self.actv1 = nn.ReLU()
@@ -30,12 +30,17 @@ class SimpleARCNN(nn.Module):
         self.pool5 = nn.MaxPool2d((3, 5), (1, 5), padding=(1, 2))
         self.pool6 = nn.AvgPool2d((5, 5), (5, 5))
         self.flatten = nn.Flatten()
-        self.dense1 = nn.Linear(256, 32)
+        self.dense1 = nn.Linear(conv_out, fc_ne)
         self.dropout1 = nn.Dropout(0.2)
-        self.fc = nn.Linear(32, accent_classes)
-        self.fca = nn.Softmax(1)
+        if not feature_only:
+            self.fc = nn.Linear(fc_ne, accent_classes)
+            self.fca = nn.Softmax(1)
+        else:
+            self.fc = nn.Identity()
+            self.fca = nn.Identity()
 
     def forward(self, x):
+        x = x.type(torch.cuda.FloatTensor)
         x = self.conv1(x)
         x = self.actv1(x)
         x = self.pool1(x)
@@ -59,6 +64,45 @@ class SimpleARCNN(nn.Module):
         x = self.fca(x)
         return x
 
+class TinyCNN(nn.Module):
+    """
+    SimpleARCNN
+    The input should be a 4D tensor [Batch size,1 (Channel),MFCC Features,Frequency Components]
+    """
+    def __init__(self, accent_classes=2,conv_output=1280,hidden=128,feature_only=False):
+        super(TinyCNN, self).__init__()
+        self.conv1 = nn.Conv2d(1, 32, (3, 3), (1, 1), padding=(1, 1))
+        self.actv1 = nn.ReLU()
+        self.pool1 = nn.MaxPool2d((3, 3), (2, 2), padding=(1, 1))
+        self.conv2 = nn.Conv2d(32, 64, (3, 3), (1, 1), padding=(1, 1))
+        self.actv2 = nn.ReLU()
+        self.pool2 = nn.MaxPool2d((3, 3), (2, 2), padding=(1, 1))
+        self.dropout1 = nn.Dropout(0.25)
+        self.flatten = nn.Flatten()
+        self.dense1 = nn.Linear(conv_output, hidden)
+        self.dropout2 = nn.Dropout(0.5)
+        if not feature_only:
+            self.fc = nn.Linear(hidden, accent_classes)
+            self.fca = nn.Softmax(1)
+        else:
+            self.fc = nn.Identity()
+            self.fca = nn.Identity()
+
+    def forward(self, x):
+        x = x.type(torch.cuda.FloatTensor)
+        x = self.conv1(x)
+        x = self.actv1(x)
+        x = self.pool1(x)
+        x = self.conv2(x)
+        x = self.actv2(x)
+        x = self.pool2(x)
+        x = self.dropout1(x)
+        x = self.flatten(x)
+        x = self.dense1(x)
+        x = self.dropout2(x)
+        x = self.fc(x)
+        x = self.fca(x)
+        return x
 
 if __name__ == "__main__":
     model = SimpleARCNN(4).to("cpu")

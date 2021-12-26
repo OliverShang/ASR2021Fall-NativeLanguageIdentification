@@ -7,11 +7,13 @@ from utils import CLASS_NUM, DEVICE
 # Input shape should be (batchsize,1,1200,40)
 
 class SimpleAESRC(nn.Module):
-    def __init__(self,classes=CLASS_NUM):
+    def __init__(self,classes=CLASS_NUM,conv_output=224,hidden=256,out_feat=128,feature_only=False):
         super(SimpleAESRC,self).__init__()
-        self.encoder = SharedEncoder(in_channels=1,hidden_dim=256)
-        self.lnk = nn.Linear(512,256)
-        self.classifier = ARIntegration((266,256),classes)
+        self.encoder = SharedEncoder(in_channels=1,hidden_dim=hidden)
+        self.lnk = nn.Linear(hidden*2,hidden)
+        self.actv = nn.Softmax(1)
+        self.classifier = ARIntegration((conv_output,hidden),classes,hidden,out_feat,feature_only)
+        self.classifier.train()
     
     def forward(self,x):
         x = self.encoder(x)

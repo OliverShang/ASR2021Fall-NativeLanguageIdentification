@@ -1,0 +1,6 @@
+{
+    "hidden": {"_type": "choice", "_value": [128, 256, 512, 1024]},
+    "batch_size": {"_type": "choice", "_value": [4, 8, 16, 32]},
+    "lr": {"_type": "uniform", "_value": [0.00001, 0.1]},
+    "optm": {"_type": "choice", "_value":["SGD", "Adadelta", "Adagrad", "Adam", "Adamax"]}
+}

@@ -1,3 +1,4 @@
+from matplotlib.pyplot import axis
 from torch.utils.data import Dataset
 import os
 import numpy as np
@@ -5,7 +6,8 @@ import pandas as pd
 import torch
 import torchaudio
 from utils import *
-from python_speech_features import delta
+from python_speech_features import delta, mfcc, fbank
+import scipy.misc
 
 
 # class UciDataset(Dataset):
@@ -13,22 +15,28 @@ from python_speech_features import delta
 #         self.data = pd.read_csv(os.path.join("data", "uci", "accent-mfcc-data.csv"))
 
 
-def feature_reshape(feature, max_len=1200):
-    x, y, z = feature.shape
-    if z >= max_len:
-        return feature[:, :, :max_len]
-    else:
-        feat_ = torch.zeros((x, y, max_len))
-        feat_[:, :, :z] = feature
-        return feat_
-
-
 class KaggleDataset(Dataset):
-    def __init__(self, feature="spectrogram"):
-        available_features = ["spectrogram", "mel_spectrogram", "mfcc"]
-        if feature in available_features:
+    def __init__(
+        self,
+        mode="dev",
+        feature="spectrogram",
+        classes=KAGGLE_CLASS_NUM,
+        segment_length=501,
+    ):
+        available_modes = ["dev", "train", "test"]
+        self.classes = classes
+        available_features = [
+            "spectrogram",
+            "mel_spectrogram",
+            "mfcc",
+            "fbank",
+            "pre_calculated_mfcc",
+        ]
+        self.segment_length = segment_length
+        self.pr = False
+        if feature in available_features and mode in available_modes:
             self.data_dict = pd.read_csv(
-                os.path.join("data", "kaggle", "dev.csv"), index_col=0
+                os.path.join("data", "kaggle", mode + ".csv"), index_col=0
             )
             self.feature = feature
         else:
@@ -39,23 +47,45 @@ class KaggleDataset(Dataset):
 
     def __getitem__(self, idx):
         file_path = self.data_dict.iloc[idx, 0]
-        waveform, samplerate = torchaudio.load(file_path)
+        if not self.feature == "pre_calculated_mfcc":
+            waveform, samplerate = torchaudio.load(file_path)
         label = self.data_dict.iloc[idx, 2]
-        one_hot_label = torch.zeros(KAGGLE_CLASS_NUM)
+        one_hot_label = torch.zeros(self.classes)
         one_hot_label[label] = 1
 
         if self.feature == "spectrogram":
-            feature = torchaudio.transforms.Spectrogram(sample_rate=samplerate)(
-                waveform
-            )
+            feature = torchaudio.transforms.Spectrogram()(waveform)
         elif self.feature == "mel_spectrogram":
-            feature = torchaudio.transforms.MelSpectrogram(sample_rate=samplerate)(
-                waveform
-            )
+            feature = torchaudio.transforms.MelSpectrogram()(waveform)
         elif self.feature == "mfcc":
-            feature = torchaudio.transforms.MFCC(sample_rate=samplerate)(waveform)
+            # feature = torchaudio.transforms.MFCC(sample_rate=samplerate)(waveform)
+            feature = mfcc(
+                waveform, samplerate=samplerate, winlen=0.0025, appendEnergy=False
+            )
+            delta_mfcc = delta(feature, 1)
+            delta_delta_mfcc = delta(delta_mfcc, 1)
+            mfccs = np.concatenate((feature, delta_mfcc, delta_delta_mfcc), axis=1)
+            feature = np.expand_dims(mfccs.T, 0)
+        elif self.feature == "fbank":
+            feature = fbank(waveform, samplerate=samplerate, winlen=0.0025)
+            feature = np.expand_dims(feature[0].T, 0)
+        elif self.feature == "pre_calculated_mfcc":
+            feature = np.load(file_path)
 
-        return feature_reshape(feature), one_hot_label
+        if self.feature == "mfcc":
+            z, x, y = feature.shape
+        else:
+            z, x, y = feature.shape
+        if self.pr == False:
+            print("Feature Shape", feature.shape)
+            self.pr = True
+        return (
+            feature_reshape(
+                torch.tensor(feature_normalization(feature[0]).reshape(1, x, y)),
+                self.segment_length,
+            ),
+            one_hot_label,
+        )
 
 
 class CommonVoiceDataset(Dataset):
@@ -98,4 +128,4 @@ class CommonVoiceDataset(Dataset):
             feature = torchaudio.transforms.MFCC()(waveform)
             # print(feature.shape)
 
-        return feature_reshape(feature), one_hot_label
+        return feature_reshape(feature_normalization(feature)), one_hot_label

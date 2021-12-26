@@ -26,7 +26,7 @@ class ARIntegration(nn.Module):
     The shape of input should be a 3D vector [Batch size,Channels,Features]
     (Channel,Features) should be the output of Conv-RNN
     """
-    def __init__(self, in_shape: list, accent_classes, hidden_dims=256):
+    def __init__(self, in_shape: list, accent_classes, hidden_dims=256,out_feat=128,feat_only=False):
         super(ARIntegration, self).__init__()
 
         # Parameters
@@ -37,7 +37,7 @@ class ARIntegration(nn.Module):
         self.dense1 = nn.Linear(in_features=in_shape[1], out_features=hidden_dims)
         self.dense1_actv = nn.Tanh()
         self.layernorm1 = nn.LayerNorm(Utility.change_shape(in_shape, 1, hidden_dims))
-
+        # self.layernorm1 = nn.LayerNorm(256)
         # Integration (GAP)
         self.integration_gap = nn.AvgPool1d(hidden_dims)
         self.integration_gapflat = nn.Flatten()
@@ -53,14 +53,20 @@ class ARIntegration(nn.Module):
         self.bn2 = nn.BatchNorm1d(hidden_dims)
 
         # Classification Layers
-        self.cl1 = nn.Linear(hidden_dims, 64)
+        self.cl1 = nn.Linear(hidden_dims, out_feat)
         self.cl1a = nn.ReLU()
-        self.cl2 = nn.Linear(64, 64)
+        self.cl2 = nn.Linear(out_feat, out_feat)
         self.cl2a = nn.ReLU()
-        self.fc = nn.Linear(64, accent_classes)
-        self.fca = nn.Softmax(0)
+        if not feat_only:
+            self.fc = nn.Linear(out_feat, accent_classes)
+            self.fca = nn.Softmax(1)
+        else:
+            self.fc = nn.Identity()
+            self.fca = nn.Identity()
+
 
     def forward(self, x):
+        x = x.type(torch.cuda.FloatTensor)
         x = self.dense1(x)
         x = self.dense1_actv(x)
         x = self.layernorm1(x)
