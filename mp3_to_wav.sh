@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for i in ./data/kaggle//*.mp3; # 遍历当前文件夹下所有的有mp3格式后缀的文件
+for i in ./data/kaggle/clips//*.mp3; # 遍历当前文件夹下所有的有mp3格式后缀的文件
 do
 ffmpeg -i "$i" -f wav "./${i}.wav"; # 用ffmpeg将mp3格式的后缀加上.wav后缀
 done

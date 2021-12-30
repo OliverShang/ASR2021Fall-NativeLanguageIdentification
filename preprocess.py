@@ -1,15 +1,15 @@
 import argparse
+import glob
 import os
 import random
 import shutil
-import glob
-import torchaudio
 
-import pandas as pd
 import numpy as np
+import pandas as pd
+import torchaudio
 from pandas.core.frame import DataFrame
-from python_speech_features import mfcc, delta
 from pydub import AudioSegment
+from python_speech_features import delta, mfcc
 
 
 def UciPreprocess():
@@ -43,9 +43,12 @@ def splitAudio(input_path, output_path, length=5):
     )
     audio = AudioSegment.from_file(input_path, format=file_ext)
     total_segments = int(audio.duration_seconds / length)
-
+    if audio.duration_seconds % length != 0:
+        total_segments = total_segments
     for i in range(total_segments):
-        audio[i * 1000 : (i + length) * 1000].export(
+        audio[
+            i * 1000 : min((i + length) * 1000, int(audio.duration_seconds * 1000))
+        ].export(
             os.path.join(output_path, file_name + "_" + str(i) + "." + file_ext),
             format="wav",
         )
@@ -62,6 +65,7 @@ def kagglePreprocess(split_audio=False, test_size=0.3, save_mfcc=False):
             filter(lambda x: len(x.split(".")) == 1 and x != "clips", os.listdir(path))
         )
         for directory in directory_list:
+            print("Splitting Audio: ", directory)
             output_path = os.path.join(base_path, directory)
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
@@ -71,7 +75,7 @@ def kagglePreprocess(split_audio=False, test_size=0.3, save_mfcc=False):
             output_path_list = [output_path for i in file_list]
             call_lazy_map = list(map(splitAudio, file_list, output_path_list))
 
-    labels = ["china-mandarin", "english", "french", "hindi"]
+    labels = ["french", "english","china-mandarin","korean","arabic","dutch","russian","china-cantonese"]
     labels.sort()
     columns = ["path", "native_language"]
     col = "native_language"
@@ -135,7 +139,7 @@ if __name__ == "__main__":
         UciPreprocess()
 
     elif str(args.dataset) == "kaggle":
-        kagglePreprocess(split_audio=False, save_mfcc=True)
+        kagglePreprocess(split_audio=False, save_mfcc=False)
 
     else:
         available_files = ["dev", "train", "test"]
@@ -143,8 +147,8 @@ if __name__ == "__main__":
             "us",
             "indian",
             "england",
-            "australia",
-            "african",
+            # "australia",
+            # "african",
             "philippines",
             "ireland",
         ]
@@ -155,7 +159,10 @@ if __name__ == "__main__":
             col = "accent"
             # Rows with accent labels
             accented_df = df[
-                (df[col].notnull()) & (df[col] != "NAN") & (df[col].isin(labels))
+                (df[col].notnull())
+                & (df[col] != "NAN")
+                & (df[col].isin(labels))
+                & (df["sentence"].notnull())
             ]
             label_list = accented_df[col].unique()
             num_data = accented_df[col].value_counts().to_frame().min(axis=0)[col]

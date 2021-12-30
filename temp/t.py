@@ -1,4 +1,4 @@
-from dataset import CommonVoiceDataset, KaggleDataset
+from utils.dataset import CommonVoiceDataset, KaggleDataset
 from torch.utils.data import DataLoader
 import torchaudio
 
@@ -10,7 +10,7 @@ if __name__ == "__main__":
     # dev_loader = DataLoader(dev_set, batch_size=64, shuffle=True)
     # dev_features, dev_labels = next(iter(dev_loader))
 
-    dev_set = KaggleDataset(feature="fbank")
+    dev_set = KaggleDataset(feature="pre_calculated_mfcc")
     dev_loader = DataLoader(dev_set, batch_size=64, shuffle=True)
     dev_features, dev_labels = next(iter(dev_loader))
     print(f"Feature batch shape: {dev_features.size()}")

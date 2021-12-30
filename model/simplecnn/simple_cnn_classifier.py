@@ -1,5 +1,4 @@
 # A simple accent classifier based on CNN
-# This is a PyTorch reimplementation of https://ieeexplore.ieee.org/abstract/document/9031923
 
 import torch
 import torch.nn as nn
@@ -105,6 +104,6 @@ class TinyCNN(nn.Module):
         return x
 
 if __name__ == "__main__":
-    model = SimpleARCNN(4).to("cpu")
+    model = TinyCNN(accent_classes=4, conv_output=80640).to("cuda")
     print(model)
-    summary(model, input_size=(1, 40, 1000), device="cpu")
+    summary(model, input_size=(1, 39, 501), device="cuda")

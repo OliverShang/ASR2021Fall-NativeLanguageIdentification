@@ -1,6 +1,4 @@
-# Implement of ArcFace / CosFace
-# By Rong Huaiyang
-# Repo:https://github.com/ronghuaiyang/arcface-pytorch/
+# Implement of Losses
 
 from __future__ import print_function
 from __future__ import division
