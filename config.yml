@@ -1,0 +1,13 @@
+searchSpaceFile: search_space.json
+trialCommand: python3 nni_train.py
+trialGpuNumber: 1
+trialConcurrency: 5 
+maxTrialNumber: 50
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
+trainingService:  # For other platforms, check mnist-pytorch example
+  platform: local
+  maxTrialNumberPerGpu: 1
+  useActiveGpu: true

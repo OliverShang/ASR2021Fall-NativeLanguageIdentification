@@ -6,10 +6,10 @@ class ResidualBlock(nn.Module):
     def __init__(self, in_channel, out_channel, stride, shortcut=None):
         super(ResidualBlock, self).__init__()
         self.basic = nn.Sequential(
-            nn.Conv2d(in_channel, out_channel, 3, stride, 1, bias=False),
+            nn.Conv2d(in_channel, out_channel, 3, stride, 1),
             nn.BatchNorm2d(out_channel),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channel, out_channel, 3, 1, 1, bias=False),
+            nn.Conv2d(out_channel, out_channel, 3, 1, 1),
             nn.BatchNorm2d(out_channel),
         )
         self.shortcut = shortcut
@@ -23,7 +23,7 @@ class ResidualBlock(nn.Module):
 
 # ResNet
 class ResNet(nn.Module):
-    def __init__(self, in_channels, resnet_type="res34"):
+    def __init__(self, in_channels, resnet_type="res50"):
         super(ResNet, self).__init__()
         self.layers = []
         self.pre = nn.Sequential(
@@ -56,6 +56,7 @@ class ResNet(nn.Module):
         return nn.Sequential(*self.layers)
 
     def forward(self, x):
+        x = x.type(torch.cuda.FloatTensor)
         x = self.pre(x)
         x = self.body(x)
         x = x.view(x.size(0), x.size(1), -1)
